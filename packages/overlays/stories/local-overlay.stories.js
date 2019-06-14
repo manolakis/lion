@@ -19,9 +19,32 @@ const popupDemoStyle = css`
     position: absolute;
     background-color: white;
     border-radius: 2px;
-    border: 1px solid grey;
+    /* border: 1px solid grey; */
     box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.12), 0 6px 6px 0 rgba(0, 0, 0, 0.24);
     padding: 8px;
+  }
+
+  .popper__arrow {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: blue;
+  }
+
+  .popper[x-placement^='bottom'] {
+    margin-top: 10px;
+  }
+
+  .popper[x-placement^='bottom'] .popper__arrow {
+    top: -10px;
+  }
+
+  .popper[x-placement^='top'] {
+    margin-bottom: 20px; /* now there will be 10px spacing between arrow and */
+  }
+
+  .popper[x-placement^='top'] .popper__arrow {
+    bottom: -10px;
   }
 `;
 
@@ -37,7 +60,7 @@ storiesOf('Local Overlay System|Local Overlay', module)
           `,
         invokerTemplate: () =>
           html`
-            <button @click=${() => popup.show()}>UK</button>
+            <button style="border: none" @click=${() => popup.show()}>United Kingdom</button>
           `,
       }),
     );

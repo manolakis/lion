@@ -1,7 +1,7 @@
 import Popper from 'popper.js/dist/popper.min.js';
 
 import { render, html } from '@lion/core';
-import { managePosition } from './utils/manage-position.js';
+// import { managePosition } from './utils/manage-position.js';
 import { containFocus } from './utils/contain-focus.js';
 import { keyCodes } from './utils/key-codes.js';
 
@@ -100,7 +100,6 @@ export class LocalOverlayController {
         render(this.contentTemplate(this._contentData), this.content);
         this.contentNode = this.content.firstElementChild;
       }
-      this.contentNode.style.display = 'inline-block';
       this.contentNode.id = this.contentId;
       this.invokerNode.setAttribute('aria-expanded', true);
 
@@ -108,22 +107,43 @@ export class LocalOverlayController {
       //   placement: this.placement,
       //   position: this.position,
       // });
+
       const arrowEl = document.createElement('div');
-      arrowEl.style = 'position:absolute;width:10px; height:10px; border: 1px solid blue;';
-      // arrowEl.setAttribute('x-arrow', '');
-      this.contentNode.prepend(arrowEl);
-      new Popper(this.invokerNode, this.contentNode, { // eslint-disable-line
-        placement: 'bottom-start', // this.placement,
+      arrowEl.classList.add('popper__arrow'); // see demo file for css
+      arrowEl.setAttribute('x-arrow', '');
+      this.contentNode.append(arrowEl);
+      this.contentNode.classList.add('popper');
+      const invokerWidth = Math.round(this.invokerNode.getBoundingClientRect().width);
+      const popperPadding = invokerWidth / 2 - 5 - 16; // middle of invoker, minus half arrow width, minus distanceFromEdge
+
+      this.popper = new Popper(this.invokerNode, this.contentNode, {
+        // eslint-disable-line
+        placement: 'bottom-start', // this.placement, needs to be aligned with popper syntax
         modifiers: {
-          // preventOverflow: { enabled: false },
-          arrow: { 
-            enabled : true, 
+          keepTogether: {
+            enabled: true, // Required for arrow to work as intended
+          },
+          preventOverflow: {
+            // This needs to be set to false when using "inner"
+            enabled: true,
+            boundariesElement: 'viewport',
+          },
+          offset: {
+            enabled: true,
+            offset: `${popperPadding}px, 0`, // To support UX case for arrow always 16px from the edge
+          },
+          /*
+          inner: {
+            enabled: true, // Useful for something like a rich select where the first option is aligned as the invoker of the listbox
+          }, */
+          /* flip: {
+            behavior: ['left', 'bottom', 'right', 'left'], // Useful for constraining flips?
+          }, */
+          arrow: {
+            enabled: true,
             element: arrowEl,
           },
-          flip: {
-            behavior: ['left', 'bottom', 'top']
-          },
-        }
+        },
       });
 
       if (this.trapsKeyboardFocus) this._setupTrapsKeyboardFocus();
@@ -131,6 +151,7 @@ export class LocalOverlayController {
     } else {
       this._updateContent();
       this.invokerNode.setAttribute('aria-expanded', false);
+      this.popper.destroy();
       if (this.hidesOnOutsideClick) this._teardownHidesOnOutsideClick();
     }
     this._prevShown = shown;
