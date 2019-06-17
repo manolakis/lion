@@ -335,7 +335,6 @@ describe('LocalOverlayController', () => {
       await nextFrame();
       const keepTogether = controller.popper.modifiers.find(item => item.name === 'keepTogether');
       const offset = controller.popper.modifiers.find(item => item.name === 'offset');
-
       expect(keepTogether.enabled).to.be.false;
       expect(offset.enabled).to.be.true;
       expect(offset.offset).to.equal('0, 16px');

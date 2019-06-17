@@ -1,7 +1,6 @@
 import Popper from 'popper.js/dist/popper.min.js';
 
 import { render, html } from '@lion/core';
-// import { managePosition } from './utils/manage-position.js';
 import { containFocus } from './utils/contain-focus.js';
 import { keyCodes } from './utils/key-codes.js';
 
@@ -12,11 +11,35 @@ export class LocalOverlayController {
       position: 'absolute',
       ...params,
     };
+    // TODO: Change to placementConfig API to wrap all local-overlay related configuration in 1 object!
+    const finalModifiers = {
+      keepTogether: {
+        enabled: false,
+      },
+      preventOverflow: {
+        enabled: true,
+        boundariesElement: 'viewport',
+        padding: 16, // viewport-margin for shifting/sliding
+      },
+      flip: {
+        boundariesElement: 'viewport',
+        padding: 16, // viewport-margin for flipping
+      },
+      offset: {
+        enabled: true,
+        offset: `0, 8px`, // horizontal and vertical margin (distance between popper and referenceElement)
+      },
+      arrow: {
+        enabled: false,
+      },
+      ...params.modifiers,
+    }
     this.hidesOnEsc = finalParams.hidesOnEsc;
     this.hidesOnOutsideClick = finalParams.hidesOnOutsideClick;
     this.trapsKeyboardFocus = finalParams.trapsKeyboardFocus;
     this.placement = finalParams.placement;
     this.position = finalParams.position;
+    this.modifiers = finalModifiers;
     this.invoker = document.createElement('div');
     this.invoker.style.display = 'inline-block';
     this.content = document.createElement('div');
@@ -101,50 +124,12 @@ export class LocalOverlayController {
         this.contentNode = this.content.firstElementChild;
       }
       this.contentNode.id = this.contentId;
+      this.contentNode.style.display = 'inline-block';
       this.invokerNode.setAttribute('aria-expanded', true);
 
-      // managePosition(this.contentNode, this.invokerNode, {
-      //   placement: this.placement,
-      //   position: this.position,
-      // });
-
-      const arrowEl = document.createElement('div');
-      arrowEl.classList.add('popper__arrow'); // see demo file for css
-      arrowEl.setAttribute('x-arrow', '');
-      this.contentNode.append(arrowEl);
-      this.contentNode.classList.add('popper');
-      const invokerWidth = Math.round(this.invokerNode.getBoundingClientRect().width);
-      const popperPadding = invokerWidth / 2 - 5 - 16; // middle of invoker, minus half arrow width, minus distanceFromEdge
-
-      this.popper = new Popper(this.invokerNode, this.contentNode, {
-        // eslint-disable-line
-        placement: 'bottom-start', // this.placement, needs to be aligned with popper syntax
-        modifiers: {
-          keepTogether: {
-            enabled: true, // Required for arrow to work as intended
-          },
-          preventOverflow: {
-            // This needs to be set to false when using "inner"
-            enabled: true,
-            boundariesElement: 'viewport',
-          },
-          offset: {
-            enabled: true,
-            offset: `${popperPadding}px, 0`, // To support UX case for arrow always 16px from the edge
-          },
-          /*
-          inner: {
-            enabled: true, // Useful for something like a rich select where the first option is aligned as the invoker of the listbox
-          }, */
-          /* flip: {
-            behavior: ['left', 'bottom', 'right', 'left'], // Useful for constraining flips?
-          }, */
-          arrow: {
-            enabled: true,
-            element: arrowEl,
-          },
-        },
-      });
+      if (!this.popper) {
+        this.__createPopperInstance();
+      }
 
       if (this.trapsKeyboardFocus) this._setupTrapsKeyboardFocus();
       if (this.hidesOnOutsideClick) this._setupHidesOnOutsideClick();
@@ -152,6 +137,7 @@ export class LocalOverlayController {
       this._updateContent();
       this.invokerNode.setAttribute('aria-expanded', false);
       this.popper.destroy();
+      this.popper = null;
       if (this.hidesOnOutsideClick) this._teardownHidesOnOutsideClick();
     }
     this._prevShown = shown;
@@ -221,5 +207,17 @@ export class LocalOverlayController {
     } else {
       this.contentNode.style.display = 'none';
     }
+  }
+
+  __createPopperInstance() {
+    console.log(this.modifiers);
+
+    this.popper = new Popper(this.invokerNode, this.contentNode, {
+      // eslint-disable-line
+      placement: this.placement, // this.placement, needs to be aligned with popper syntax
+      position: this.position,
+      modifiers: this.modifiers,
+    });
+    console.log(this.popper);
   }
 }

@@ -60,7 +60,7 @@ storiesOf('Local Overlay System|Local Overlay', module)
           `,
         invokerTemplate: () =>
           html`
-            <button style="border: none" @click=${() => popup.show()}>United Kingdom</button>
+            <button style="border: none" @click=${() => popup.show()}>UK</button>
           `,
       }),
     );
@@ -231,6 +231,49 @@ storiesOf('Local Overlay System|Local Overlay', module)
       </style>
       <div class="demo-box">
         ${popup.invoker}${popup.content}
+      </div>
+    `;
+  })
+  .add('Override Popper modifiers', () => {
+    const popup = overlays.add(
+      new LocalOverlayController({
+        hidesOnEsc: true,
+        hidesOnOutsideClick: true,
+        // TODO: Change to placementConfig API to wrap all local-overlay related configuration in 1 object!
+        modifiers: {
+          keepTogether: {
+            enabled: true,
+          },
+          preventOverflow: {
+            enabled: true,
+            boundariesElement: 'viewport',
+            padding: 32,
+          },
+          flip: {
+            boundariesElement: 'viewport',
+            padding: 32,
+          },
+          offset: {
+            enabled: true,
+            offset: `0, 16px`, // horizontal and vertical margin (distance between popper and referenceElement)
+          },
+        },
+        contentTemplate: () =>
+          html`
+            <div class="demo-popup">United Kingdom</div>
+          `,
+        invokerTemplate: () =>
+          html`
+            <button style="border: none" @click=${() => popup.show()}>UK</button>
+          `,
+      }),
+    );
+    return html`
+      <style>
+        ${popupDemoStyle}
+      </style>
+      <div class="demo-box">
+        In the ${popup.invoker}${popup.content} the weather is nice.
       </div>
     `;
   });
